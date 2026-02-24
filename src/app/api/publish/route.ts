@@ -70,6 +70,17 @@ export async function POST(request: NextRequest) {
     const REPO_NAME = process.env.GITHUB_REPO_NAME;
     const isDev = process.env.NODE_ENV === 'development';
 
+    // 生产模式：必须使用 GitHub API
+    console.log('环境变量检查:', {
+      hasToken: !!GITHUB_TOKEN,
+      hasOwner: !!REPO_OWNER,
+      hasRepo: !!REPO_NAME,
+      nodeEnv: process.env.NODE_ENV,
+      tokenPrefix: GITHUB_TOKEN ? GITHUB_TOKEN.slice(0, 10) : 'none',
+      repoOwner: REPO_OWNER || 'none',
+      repoName: REPO_NAME || 'none'
+    });
+
     // 本地开发模式：写入本地文件
     if (isDev) {
       const rootDir = path.join(__dirname, '../../..');
