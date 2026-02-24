@@ -11,8 +11,21 @@ import { MicroPostCard } from '@/components/MicroPostCard';
 import { TimelineTabs } from '@/components/TimelineTabs';
 import { PublishModal } from '@/components/PublishModal';
 
-export default function HomeClient({ posts, microposts }: { posts: any[]; microposts: any[] }) {
+export default function HomeClient({ initialPosts, initialMicroposts }: { initialPosts: any[]; initialMicroposts: any[] }) {
+  const [posts, setPosts] = useState(initialPosts);
+  const [microposts, setMicroposts] = useState(initialMicroposts);
   const [publishType, setPublishType] = useState<'post' | 'micropost' | null>(null);
+
+  const handlePublishSuccess = async () => {
+    try {
+      const res = await fetch('/api/refresh');
+      const data = await res.json();
+      if (data.posts) setPosts(data.posts);
+      if (data.microposts) setMicroposts(data.microposts);
+    } catch (e) {
+      console.error('刷新失败', e);
+    }
+  };
 
   const content: any[] = [
     ...posts.map((post) => ({ ...post, type: 'post' })),
@@ -112,6 +125,7 @@ export default function HomeClient({ posts, microposts }: { posts: any[]; microp
         isOpen={publishType !== null}
         onClose={() => setPublishType(null)}
         type={publishType || 'micropost'}
+        onSuccess={handlePublishSuccess}
       />
     </div>
   );

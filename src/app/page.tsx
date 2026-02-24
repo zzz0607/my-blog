@@ -6,5 +6,5 @@ export default function Home() {
   const posts = getAllPosts();
   const microposts = getAllMicroPosts();
 
-  return <HomeClient posts={posts} microposts={microposts} />;
+  return <HomeClient initialPosts={posts} initialMicroposts={microposts} />;
 }
