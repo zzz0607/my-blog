@@ -178,6 +178,10 @@ describe('formatDate', () => {
 - Create feature branches for new features
 - Use pre-commit hooks for linting
 
+### Workflow Requirements
+
+- **每次修改完代码后**，必须执行 `git add -A && git commit -m "..." && git push`，确保代码自动推送到远程仓库触发 Vercel 部署
+
 ### Documentation
 
 - Document complex utility functions with JSDoc
