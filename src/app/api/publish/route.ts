@@ -64,12 +64,14 @@ export async function POST(request: NextRequest) {
 
     const { path: filePath, content } = createFileContent(body);
 
-    // 生产环境必须使用 GitHub API
+    // 获取环境变量
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const REPO_OWNER = process.env.GITHUB_REPO_OWNER;
+    const REPO_NAME = process.env.GITHUB_REPO_NAME;
     const isDev = process.env.NODE_ENV === 'development';
-    const hasGitHubConfig = process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_OWNER && process.env.GITHUB_REPO_NAME;
-    
-    // 本地开发模式且没有配置 GitHub 时，写入本地文件
-    if (isDev && !hasGitHubConfig) {
+
+    // 本地开发模式：写入本地文件
+    if (isDev) {
       const rootDir = path.join(__dirname, '../../..');
       const fullDir = path.join(rootDir, filePath.replace(/[^/]+$/, ''));
       const fullPath = path.join(rootDir, filePath);
@@ -83,21 +85,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true, 
         message: '本地保存成功',
-        filePath,
-        note: '开发模式下文件已保存到本地，请重启开发服务器查看'
+        filePath
       });
     }
 
-    // 生产模式：使用 GitHub API
-    if (!hasGitHubConfig) {
+    // 生产模式：必须使用 GitHub API
+    if (!GITHUB_TOKEN || !REPO_OWNER || !REPO_NAME) {
       return NextResponse.json({ 
-        error: 'GitHub 未配置，请设置环境变量 GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME' 
+        error: 'GitHub 未配置，请设置环境变量',
+        debug: {
+          hasToken: !!GITHUB_TOKEN,
+          hasOwner: !!REPO_OWNER,
+          hasRepo: !!REPO_NAME,
+          nodeEnv: process.env.NODE_ENV
+        }
       }, { status: 500 });
     }
-
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const REPO_OWNER = process.env.GITHUB_REPO_OWNER;
-    const REPO_NAME = process.env.GITHUB_REPO_NAME;
 
     const githubResponse = await fetch(
       `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`,
@@ -126,7 +129,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       message: '发布成功',
       filePath,
-      commitUrl: githubData.commit.html_url,
+      commitUrl: githubData.commit?.html_url
     });
 
   } catch (error: any) {
