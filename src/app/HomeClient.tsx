@@ -43,7 +43,7 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
       <RightSidebar />
       <MobileMenu isOpen={false} onClose={() => {}} />
       
-      <main className="ml-[275px] mr-[280px] max-w-[600px] pt-14 pb-16 md:pb-0">
+      <main className="ml-[275px] mr-[280px] max-w-[800px] pt-14 pb-16 md:pb-0">
         <div className="border-b border-x-border sticky top-14 bg-white/80 dark:bg-black/80 backdrop-blur-md z-10">
           <h1 className="px-4 py-3 font-bold text-xl text-x-black dark:text-white">首页</h1>
           <TimelineTabs onChange={() => {}} />
