@@ -1,15 +1,18 @@
-import { getPostBySlug } from '@/lib/posts';
+import { getPostBySlug, getAllPostSlugs } from '@/lib/posts';
 import PostDetailClient from './PostDetailClient';
 
-export default function PostPage({ params }: { params: { slug: string } }) {
-  const post = getPostBySlug(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+
+  if (!post) {
+    return <div>Post not found</div>;
+  }
 
   return <PostDetailClient post={post} />;
 }
 
-export function generateStaticParams() {
-  return [
-    { slug: 'my-first-post' },
-    { slug: 'why-i-love-thinking' },
-  ];
+export async function generateStaticParams() {
+  const slugs = await getAllPostSlugs();
+  return slugs.map((slug) => ({ slug }));
 }

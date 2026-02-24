@@ -1,65 +1,49 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
+import { supabase } from './supabase';
+import { MicroPost } from '@/types';
 
-const micropostsDirectory = path.join(process.cwd(), 'content/microposts');
-
-export interface MicroPost {
+export interface MicroPostRow {
   id: string;
   content: string;
-  createdAt: string;
   likes: number;
-  commentCount: number;
+  comment_count: number;
+  created_at: string;
 }
 
-function getFileNames(): string[] {
-  try {
-    if (!fs.existsSync(micropostsDirectory)) {
-      return [];
-    }
-    return fs.readdirSync(micropostsDirectory).filter((file) => file.endsWith('.md'));
-  } catch {
+function mapRowToMicroPost(row: MicroPostRow): MicroPost {
+  return {
+    id: row.id,
+    content: row.content,
+    likes: row.likes,
+    commentCount: row.comment_count,
+    createdAt: row.created_at,
+  };
+}
+
+export async function getAllMicroPosts(): Promise<MicroPost[]> {
+  const { data, error } = await supabase
+    .from('microposts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Error fetching microposts:', error);
     return [];
   }
+
+  return data.map(mapRowToMicroPost);
 }
 
-export function getAllMicroPosts(): MicroPost[] {
-  const fileNames = getFileNames();
-  const allPosts = fileNames.map((fileName) => {
-    const id = fileName.replace(/\.md$/, '');
-    const fullPath = path.join(micropostsDirectory, fileName);
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const { data } = matter(fileContents);
+export async function getMicroPostById(id: string): Promise<MicroPost | null> {
+  const { data, error } = await supabase
+    .from('microposts')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    return {
-      id,
-      content: data.content || '',
-      createdAt: data.createdAt || new Date().toISOString(),
-      likes: data.likes || 0,
-      commentCount: data.commentCount || 0,
-    };
-  });
-
-  return allPosts.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
-export function getMicroPostById(id: string): MicroPost | null {
-  const fullPath = path.join(micropostsDirectory, `${id}.md`);
-  
-  if (!fs.existsSync(fullPath)) {
+  if (error || !data) {
+    console.error('Error fetching micropost:', error);
     return null;
   }
 
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const { data } = matter(fileContents);
-
-  return {
-    id,
-    content: data.content || '',
-    createdAt: data.createdAt || new Date().toISOString(),
-    likes: data.likes || 0,
-    commentCount: data.commentCount || 0,
-  };
+  return mapRowToMicroPost(data);
 }

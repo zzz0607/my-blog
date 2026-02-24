@@ -1,100 +1,88 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
+import { supabase } from './supabase';
+import { Post, PostMeta } from '@/types';
 
-const postsDirectory = path.join(process.cwd(), 'content/posts');
-
-export interface Post {
+export interface PostRow {
   id: string;
   slug: string;
   title: string;
-  content: string;
-  excerpt: string;
-  coverImage?: string;
-  category: string;
-  tags: string[];
-  viewCount: number;
-  createdAt: string;
-  updatedAt: string;
+  content: string | null;
+  excerpt: string | null;
+  cover_image: string | null;
+  category: string | null;
+  tags: string[] | null;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface PostMeta {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  category: string;
-  tags: string[];
-  viewCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-function getFileNames(): string[] {
-  try {
-    if (!fs.existsSync(postsDirectory)) {
-      return [];
-    }
-    return fs.readdirSync(postsDirectory).filter((file) => file.endsWith('.md'));
-  } catch {
-    return [];
-  }
-}
-
-export function getAllPosts(): PostMeta[] {
-  const fileNames = getFileNames();
-  const allPosts = fileNames.map((fileName) => {
-    const slug = fileName.replace(/\.md$/, '');
-    const fullPath = path.join(postsDirectory, fileName);
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const { data } = matter(fileContents);
-
-    return {
-      id: slug,
-      slug,
-      title: data.title || '',
-      excerpt: data.excerpt || '',
-      coverImage: data.coverImage || '',
-      category: data.category || '未分类',
-      tags: data.tags || [],
-      viewCount: 0,
-      createdAt: data.createdAt || new Date().toISOString(),
-      updatedAt: data.createdAt || new Date().toISOString(),
-    };
-  });
-
-  return allPosts.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
-export function getPostBySlug(slug: string): Post | null {
-  const fullPath = path.join(postsDirectory, `${slug}.md`);
-  
-  if (!fs.existsSync(fullPath)) {
-    return null;
-  }
-
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const { data, content } = matter(fileContents);
-
+function mapRowToPost(row: PostRow): Post {
   return {
-    id: slug,
-    slug,
-    content,
-    title: data.title || '',
-    excerpt: data.excerpt || '',
-    coverImage: data.coverImage || '',
-    category: data.category || '未分类',
-    tags: data.tags || [],
-    viewCount: 0,
-    createdAt: data.createdAt || new Date().toISOString(),
-    updatedAt: data.createdAt || new Date().toISOString(),
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    content: row.content || '',
+    excerpt: row.excerpt || '',
+    coverImage: row.cover_image || undefined,
+    category: row.category || '未分类',
+    tags: row.tags || [],
+    viewCount: row.view_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
-export function getAllPostSlugs(): string[] {
-  const fileNames = getFileNames();
-  return fileNames.map((fileName) => fileName.replace(/\.md$/, ''));
+function mapRowToPostMeta(row: PostRow): PostMeta {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt || '',
+    coverImage: row.cover_image || undefined,
+    category: row.category || '未分类',
+    tags: row.tags || [],
+    viewCount: row.view_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function getAllPosts(): Promise<PostMeta[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Error fetching posts:', error);
+    return [];
+  }
+
+  return data.map(mapRowToPostMeta);
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error || !data) {
+    console.error('Error fetching post:', error);
+    return null;
+  }
+
+  return mapRowToPost(data);
+}
+
+export async function getAllPostSlugs(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('slug');
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map(row => row.slug);
 }

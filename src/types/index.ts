@@ -12,6 +12,19 @@ export interface Post {
   updatedAt: string;
 }
 
+export interface PostMeta {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  coverImage?: string;
+  category: string;
+  tags: string[];
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MicroPost {
   id: string;
   content: string;
