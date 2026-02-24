@@ -15,7 +15,7 @@ const whoToFollow = [
 
 export function RightSidebar() {
   return (
-    <aside className="fixed right-0 top-14 bottom-0 w-[350px] px-4 py-2 hidden lg:block">
+    <aside className="fixed right-0 top-14 bottom-0 w-[280px] px-4 py-2 hidden lg:block">
       <div className="sticky top-2">
         <div className="bg-white dark:bg-black rounded-2xl border border-x-border overflow-hidden">
           <h2 className="px-4 py-3 font-bold text-x-black dark:text-white text-lg">
