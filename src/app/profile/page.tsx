@@ -1,10 +1,10 @@
 import { getAllPosts } from '@/lib/posts';
 import { getAllMicroPosts } from '@/lib/microposts';
-import HomeClient from './HomeClient';
+import ProfileClient from './ProfileClient';
 
-export default function Home() {
+export default function Profile() {
   const posts = getAllPosts();
   const microposts = getAllMicroPosts();
 
-  return <HomeClient posts={posts} microposts={microposts} />;
+  return <ProfileClient posts={posts} microposts={microposts} />;
 }
