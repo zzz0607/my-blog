@@ -64,12 +64,15 @@ export async function POST(request: NextRequest) {
 
     const { path: filePath, content } = createFileContent(body);
 
-    // 本地开发模式：直接写入文件
-    const isLocalDev = process.env.NODE_ENV === 'development' || !process.env.GITHUB_TOKEN;
+    // 生产环境必须使用 GitHub API
+    const isDev = process.env.NODE_ENV === 'development';
+    const hasGitHubConfig = process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_OWNER && process.env.GITHUB_REPO_NAME;
     
-    if (isLocalDev) {
-      const fullDir = path.join(process.cwd(), filePath.replace(/[^/]+$/, ''));
-      const fullPath = path.join(process.cwd(), filePath);
+    // 本地开发模式且没有配置 GitHub 时，写入本地文件
+    if (isDev && !hasGitHubConfig) {
+      const rootDir = path.join(__dirname, '../../..');
+      const fullDir = path.join(rootDir, filePath.replace(/[^/]+$/, ''));
+      const fullPath = path.join(rootDir, filePath);
       
       if (!fs.existsSync(fullDir)) {
         fs.mkdirSync(fullDir, { recursive: true });
@@ -86,15 +89,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 生产模式：使用 GitHub API
+    if (!hasGitHubConfig) {
+      return NextResponse.json({ 
+        error: 'GitHub 未配置，请设置环境变量 GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME' 
+      }, { status: 500 });
+    }
+
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
     const REPO_OWNER = process.env.GITHUB_REPO_OWNER;
     const REPO_NAME = process.env.GITHUB_REPO_NAME;
-
-    if (!GITHUB_TOKEN || !REPO_OWNER || !REPO_NAME) {
-      return NextResponse.json({ 
-        error: 'GitHub 未配置，请设置 GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME' 
-      }, { status: 500 });
-    }
 
     const githubResponse = await fetch(
       `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`,
