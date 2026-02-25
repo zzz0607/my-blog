@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { supabase } from '@/lib/supabase';
 
 interface PublishBody {
   type: 'post' | 'micropost';
@@ -171,7 +172,50 @@ export async function POST(request: NextRequest) {
     }
 
     const githubData = await githubResponse.json();
-    console.log('[Publish] 发布成功:', { filePath, commitUrl: githubData.commit?.html_url });
+    console.log('[Publish] GitHub 保存成功:', { filePath, commitUrl: githubData.commit?.html_url });
+
+    // 同时保存到 Supabase
+    if (supabase) {
+      try {
+        if (body.type === 'micropost') {
+          const { error: insertError } = await supabase.from('microposts').insert({
+            content: body.content,
+            likes: 0,
+            comment_count: 0,
+            created_at: new Date().toISOString(),
+          });
+          
+          if (insertError) {
+            console.error('[Publish] Supabase 写入失败:', insertError);
+          } else {
+            console.log('[Publish] Supabase 写入成功: microposts');
+          }
+        } else if (body.type === 'post') {
+          const slug = generateSlug(body.title || body.content.slice(0, 30));
+          const { error: insertError } = await supabase.from('posts').insert({
+            slug,
+            title: body.title,
+            content: body.content,
+            excerpt: body.content.slice(0, 100),
+            category: body.category || '未分类',
+            tags: body.tags || [],
+            view_count: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          
+          if (insertError) {
+            console.error('[Publish] Supabase 写入失败:', insertError);
+          } else {
+            console.log('[Publish] Supabase 写入成功: posts');
+          }
+        }
+      } catch (supabaseError: any) {
+        console.error('[Publish] Supabase 异常:', supabaseError);
+      }
+    } else {
+      console.log('[Publish] Supabase 未配置，跳过数据库写入');
+    }
 
     return NextResponse.json({ 
       success: true, 
