@@ -71,7 +71,8 @@ export async function POST(request: NextRequest) {
     const isDev = process.env.NODE_ENV === 'development';
 
     // 生产模式：必须使用 GitHub API
-    console.log('环境变量检查:', {
+    console.log('[Publish] 开始发布:', { type: body.type, title: body.title || body.content.slice(0, 30) });
+    console.log('[Publish] 环境变量检查:', {
       hasToken: !!GITHUB_TOKEN,
       hasOwner: !!REPO_OWNER,
       hasRepo: !!REPO_NAME,
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
       }
       
       fs.writeFileSync(fullPath, content);
+      console.log('[Publish] 本地保存成功:', filePath);
       
       return NextResponse.json({ 
         success: true, 
@@ -102,6 +104,7 @@ export async function POST(request: NextRequest) {
 
     // 生产模式：必须使用 GitHub API
     if (!GITHUB_TOKEN || !REPO_OWNER || !REPO_NAME) {
+      console.error('[Publish] GitHub 环境变量未配置');
       return NextResponse.json({ 
         error: 'GitHub 未配置，请设置环境变量',
         debug: {
@@ -113,6 +116,41 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // 检查文件是否已存在，获取 SHA
+    let sha: string | undefined;
+    const checkResponse = await fetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
+    );
+
+    if (checkResponse.ok) {
+      const checkData = await checkResponse.json();
+      sha = checkData.sha;
+      console.log('[Publish] 文件已存在，获取 SHA:', sha);
+    } else if (checkResponse.status !== 404) {
+      const error = await checkResponse.json();
+      console.error('[Publish] 检查文件失败:', error);
+      return NextResponse.json({ error: error.message || '检查文件失败' }, { status: checkResponse.status });
+    }
+
+    const putBody: Record<string, unknown> = {
+      message: `feat: 添加新的${body.type === 'post' ? '文章' : '短动态'}`,
+      content: Buffer.from(content).toString('base64'),
+    };
+
+    if (sha) {
+      putBody.sha = sha;
+      console.log('[Publish] 更新已存在的文件');
+    } else {
+      console.log('[Publish] 创建新文件');
+    }
+
     const githubResponse = await fetch(
       `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`,
       {
@@ -122,19 +160,18 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
           'Accept': 'application/vnd.github.v3+json',
         },
-        body: JSON.stringify({
-          message: `feat: 添加新的${body.type === 'post' ? '文章' : '短动态'}`,
-          content: Buffer.from(content).toString('base64'),
-        }),
+        body: JSON.stringify(putBody),
       }
     );
 
     if (!githubResponse.ok) {
       const error = await githubResponse.json();
+      console.error('[Publish] GitHub API 错误:', error);
       return NextResponse.json({ error: error.message || 'GitHub API 错误' }, { status: githubResponse.status });
     }
 
     const githubData = await githubResponse.json();
+    console.log('[Publish] 发布成功:', { filePath, commitUrl: githubData.commit?.html_url });
 
     return NextResponse.json({ 
       success: true, 
@@ -144,6 +181,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    console.error('[Publish] 异常:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
