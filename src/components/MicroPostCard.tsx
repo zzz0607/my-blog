@@ -24,6 +24,7 @@ export function MicroPostCard({ post, onDelete }: MicroPostCardProps) {
   };
 
   const handleDelete = async () => {
+    console.log('[MicroPostCard] 开始删除, id:', post.id, 'type: micropost');
     setDeleting(true);
     try {
       const res = await fetch('/api/delete', {
@@ -32,14 +33,17 @@ export function MicroPostCard({ post, onDelete }: MicroPostCardProps) {
         body: JSON.stringify({ type: 'micropost', id: post.id }),
       });
       
+      const data = await res.json();
+      console.log('[MicroPostCard] 删除响应:', { status: res.ok, data });
+      
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || '删除失败');
       }
       
       setShowDeleteConfirm(false);
       onDelete?.(post.id);
     } catch (err: any) {
+      console.error('[MicroPostCard] 删除错误:', err);
       alert(err.message);
     } finally {
       setDeleting(false);

@@ -38,7 +38,11 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
   };
 
   const handleDeleteMicroPost = (id: string) => {
-    setMicroposts(microposts.filter(m => m.id !== id));
+    console.log('[HomeClient] handleDeleteMicroPost, id:', id, '当前列表长度:', microposts.length);
+    setMicroposts(microposts.filter(m => {
+      console.log('对比:', m.id, '===', id, '?', m.id === id);
+      return m.id !== id;
+    }));
   };
 
   return (

@@ -27,18 +27,23 @@ export async function DELETE(request: NextRequest) {
 
     const tableName = body.type === 'post' ? 'posts' : 'microposts';
     
-    const { error } = await supabase
+    console.log('[Delete] 准备删除, table:', tableName, 'id:', body.id);
+    
+    const { data, error } = await supabase
       .from(tableName)
       .delete()
-      .eq('id', body.id);
+      .eq('id', body.id)
+      .select();
+
+    console.log('[Delete] 删除结果:', { data, error });
 
     if (error) {
       console.error('[Delete] Supabase 删除失败:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('[Delete] 删除成功:', body.id);
-    return NextResponse.json({ success: true, message: '删除成功' });
+    console.log('[Delete] 删除成功:', body.id, '影响的行数:', data?.length || 0);
+    return NextResponse.json({ success: true, message: '删除成功', deletedId: body.id });
   } catch (error: any) {
     console.error('[Delete] 异常:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
