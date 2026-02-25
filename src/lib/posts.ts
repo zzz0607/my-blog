@@ -127,7 +127,8 @@ function mapRowToPostMeta(row: PostRow): PostMeta {
 
 export async function getAllPosts(): Promise<PostMeta[]> {
   if (!supabase) {
-    return getPostsFromContent();
+    console.log('[Posts] Supabase 未配置，使用空数据');
+    return [];
   }
   
   const { data, error } = await supabase
@@ -135,11 +136,17 @@ export async function getAllPosts(): Promise<PostMeta[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    console.error('Error fetching posts:', error);
-    return getPostsFromContent();
+  if (error) {
+    console.error('[Posts] 获取失败:', error);
+    return [];
   }
 
+  if (!data) {
+    console.log('[Posts] 无数据');
+    return [];
+  }
+
+  console.log('[Posts] 获取成功:', data.length, '条');
   return data.map(mapRowToPostMeta);
 }
 

@@ -7,6 +7,8 @@ export async function GET() {
     const posts = await getAllPosts();
     const microposts = await getAllMicroPosts();
     
+    console.log('[Refresh] posts:', posts.length, 'microposts:', microposts.length);
+    
     return NextResponse.json({ posts, microposts });
   } catch (error: any) {
     console.error('[Refresh] 异常:', error);

@@ -21,6 +21,7 @@ function mapRowToMicroPost(row: MicroPostRow): MicroPost {
 
 export async function getAllMicroPosts(): Promise<MicroPost[]> {
   if (!supabase) {
+    console.log('[Microposts] Supabase 未配置，使用空数据');
     return [];
   }
   
@@ -29,11 +30,17 @@ export async function getAllMicroPosts(): Promise<MicroPost[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    console.error('Error fetching microposts:', error);
+  if (error) {
+    console.error('[Microposts] 获取失败:', error);
     return [];
   }
 
+  if (!data) {
+    console.log('[Microposts] 无数据');
+    return [];
+  }
+
+  console.log('[Microposts] 获取成功:', data.length, '条');
   return data.map(mapRowToMicroPost);
 }
 
