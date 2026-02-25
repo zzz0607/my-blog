@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         slug,
         title: body.title,
         content: body.content,
-        excerpt: body.content.slice(0, 100),
+        excerpt: body.content.slice(0, 100) || '',
         cover_image: null,
         category: body.category || '未分类',
         tags: body.tags || [],

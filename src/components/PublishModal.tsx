@@ -17,6 +17,7 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
   const [tags, setTags] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     setContent('');
@@ -25,6 +26,16 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
     setCategory('技术');
     setError('');
   }, [type, isOpen]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -59,8 +70,12 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
       setContent('');
       setTitle('');
       setTags('');
-      onClose();
-      onSuccess?.();
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose();
+        onSuccess?.();
+      }, 500);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -132,6 +147,9 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
 
           {error && (
             <p className="mt-3 text-sm text-x-red">{error}</p>
+          )}
+          {showSuccess && (
+            <p className="mt-3 text-sm text-x-green-500">发布成功!</p>
           )}
         </div>
 

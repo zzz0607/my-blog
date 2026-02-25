@@ -19,11 +19,13 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
   const handlePublishSuccess = async () => {
     try {
       const res = await fetch('/api/refresh');
+      if (!res.ok) throw new Error('刷新失败');
       const data = await res.json();
       if (data.posts) setPosts(data.posts);
       if (data.microposts) setMicroposts(data.microposts);
     } catch (e) {
       console.error('刷新失败', e);
+      alert('发布成功，数据刷新失败，请刷新页面');
     }
   };
 
