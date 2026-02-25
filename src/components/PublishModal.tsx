@@ -53,7 +53,7 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
       setTags('');
       onSuccess?.();
       onClose();
-      alert(`发布成功！文件已创建: ${data.filePath}\n\n请提交到 GitHub 以发布到线上。`);
+      alert('发布成功！');
     } catch (err: any) {
       setError(err.message);
     } finally {
