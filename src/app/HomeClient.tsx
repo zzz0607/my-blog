@@ -38,6 +38,14 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
     setPublishType(type);
   };
 
+  const handleDeletePost = (id: string) => {
+    setPosts(posts.filter(p => p.id !== id));
+  };
+
+  const handleDeleteMicroPost = (id: string) => {
+    setMicroposts(microposts.filter(m => m.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       <TopNav />
@@ -112,9 +120,9 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
           {content.map((item: any, index: number) => (
             <div key={`${item.type}-${index}`}>
               {item.type === 'post' ? (
-                <PostCard post={item} />
+                <PostCard post={item} onDelete={handleDeletePost} />
               ) : (
-                <MicroPostCard post={item} />
+                <MicroPostCard post={item} onDelete={handleDeleteMicroPost} />
               )}
             </div>
           ))}
