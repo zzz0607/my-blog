@@ -67,15 +67,12 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
         throw new Error(data.error || '发布失败');
       }
 
-      setContent('');
-      setTitle('');
-      setTags('');
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
-        onSuccess?.();
       }, 500);
+      onSuccess?.();
     } catch (err: any) {
       setError(err.message);
     } finally {
