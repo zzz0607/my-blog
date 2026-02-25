@@ -20,6 +20,10 @@ function mapRowToMicroPost(row: MicroPostRow): MicroPost {
 }
 
 export async function getAllMicroPosts(): Promise<MicroPost[]> {
+  if (!supabase) {
+    return [];
+  }
+  
   const { data, error } = await supabase
     .from('microposts')
     .select('*')
@@ -34,6 +38,10 @@ export async function getAllMicroPosts(): Promise<MicroPost[]> {
 }
 
 export async function getMicroPostById(id: string): Promise<MicroPost | null> {
+  if (!supabase) {
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('microposts')
     .select('*')
