@@ -10,11 +10,13 @@ interface PublishBody {
 }
 
 function generateSlug(title: string): string {
-  return title
+  const base = title
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^\w-]/g, '')
-    .slice(0, 50);
+    .slice(0, 40);
+  const timestamp = Date.now().toString(36);
+  return `${base}-${timestamp}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -28,6 +30,11 @@ export async function POST(request: NextRequest) {
     if (body.type !== 'post' && body.type !== 'micropost') {
       return NextResponse.json({ error: '类型错误' }, { status: 400 });
     }
+
+    if (body.type === 'post' && !body.title?.trim()) {
+      return NextResponse.json({ error: '文章标题不能为空' }, { status: 400 });
+    }
+
 
     console.log('[Publish] 开始发布:', { type: body.type, title: body.title || body.content.slice(0, 30) });
 

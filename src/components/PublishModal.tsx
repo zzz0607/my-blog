@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Image, Smile } from 'lucide-react';
 
 interface PublishModalProps {
@@ -17,6 +17,14 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
   const [tags, setTags] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setContent('');
+    setTitle('');
+    setTags('');
+    setCategory('技术');
+    setError('');
+  }, [type, isOpen]);
 
   if (!isOpen) return null;
 
@@ -51,9 +59,8 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
       setContent('');
       setTitle('');
       setTags('');
-      onSuccess?.();
       onClose();
-      alert('发布成功！');
+      onSuccess?.();
     } catch (err: any) {
       setError(err.message);
     } finally {
