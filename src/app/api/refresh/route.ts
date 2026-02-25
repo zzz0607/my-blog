@@ -4,11 +4,12 @@ import { getAllMicroPosts } from '@/lib/microposts';
 
 export async function GET() {
   try {
-    const posts = getAllPosts();
-    const microposts = getAllMicroPosts();
+    const posts = await getAllPosts();
+    const microposts = await getAllMicroPosts();
     
     return NextResponse.json({ posts, microposts });
   } catch (error: any) {
+    console.error('[Refresh] 异常:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
