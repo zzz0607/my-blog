@@ -7,7 +7,7 @@ interface PublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'post' | 'micropost';
-  onSuccess?: () => void;
+  onSuccess?: (newItem: any, type: 'post' | 'micropost') => void;
 }
 
 export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalProps) {
@@ -72,7 +72,7 @@ export function PublishModal({ isOpen, onClose, type, onSuccess }: PublishModalP
         setShowSuccess(false);
         onClose();
       }, 500);
-      onSuccess?.();
+      onSuccess?.(data.newItem, data.type);
     } catch (err: any) {
       setError(err.message);
     } finally {

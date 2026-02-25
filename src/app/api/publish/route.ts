@@ -44,11 +44,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.type === 'micropost') {
+      const createdAt = new Date().toISOString();
       const { data, error } = await supabase.from('microposts').insert({
         content: body.content,
         likes: 0,
         comment_count: 0,
-        created_at: new Date().toISOString(),
+        created_at: createdAt,
       }).select();
 
       if (error) {
@@ -56,9 +57,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
+      const newMicropost = {
+        id: data[0]?.id || `temp-${Date.now()}`,
+        content: body.content,
+        likes: 0,
+        commentCount: 0,
+        createdAt,
+      };
+
       console.log('[Publish] 短动态发布成功:', data);
-      return NextResponse.json({ success: true, message: '发布成功', data });
+      return NextResponse.json({ success: true, message: '发布成功', newItem: newMicropost, type: 'micropost' });
     } else {
+      const createdAt = new Date().toISOString();
       const slug = generateSlug(body.title || body.content.slice(0, 30));
       const { data, error } = await supabase.from('posts').insert({
         slug,
@@ -69,8 +79,8 @@ export async function POST(request: NextRequest) {
         category: body.category || '未分类',
         tags: body.tags || [],
         view_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: createdAt,
+        updated_at: createdAt,
       }).select();
 
       if (error) {
@@ -78,8 +88,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
+      const newPost = {
+        id: data[0]?.id || `temp-${Date.now()}`,
+        slug,
+        title: body.title,
+        content: body.content,
+        excerpt: body.content.slice(0, 100) || '',
+        coverImage: undefined,
+        category: body.category || '未分类',
+        tags: body.tags || [],
+        viewCount: 0,
+        createdAt,
+        updatedAt: createdAt,
+      };
+
       console.log('[Publish] 文章发布成功:', data);
-      return NextResponse.json({ success: true, message: '发布成功', data });
+      return NextResponse.json({ success: true, message: '发布成功', newItem: newPost, type: 'post' });
     }
   } catch (error: any) {
     console.error('[Publish] 异常:', error);
