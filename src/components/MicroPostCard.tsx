@@ -123,6 +123,7 @@ export function MicroPostCard({ post, onDelete }: MicroPostCardProps) {
       message="此操作无法撤销，这条短动态将被永久删除。"
       onConfirm={handleDelete}
       onCancel={() => setShowDeleteConfirm(false)}
+      loading={deleting}
     />
     </>
   );

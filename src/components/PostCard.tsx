@@ -49,9 +49,18 @@ export function PostCard({ post, onDelete }: PostCardProps) {
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
   return (
     <>
-    <div className="block p-4 border-b border-x-border hover:bg-x-hover dark:hover:bg-[#181818] transition-colors cursor-pointer">
+    <Link
+      href={`/post/${post.slug}`}
+      className="block p-4 border-b border-x-border hover:bg-x-hover dark:hover:bg-[#181818] transition-colors cursor-pointer"
+    >
       <div className="flex gap-3">
         <div className="w-10 h-10 rounded-full bg-x-light-gray flex-shrink-0" />
         
@@ -66,12 +75,8 @@ export function PostCard({ post, onDelete }: PostCardProps) {
               </span>
             </div>
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowDeleteConfirm(true);
-              }}
-              className="p-2 rounded-full text-x-gray hover:text-x-red hover:bg-x-red/10 transition-colors"
+              onClick={handleDeleteClick}
+              className="p-2 rounded-full text-x-gray hover:text-x-red hover:bg-x-red/10 transition-colors z-10 relative"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -107,7 +112,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
 
     <ConfirmModal
       isOpen={showDeleteConfirm}
@@ -115,6 +120,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
       message="此操作无法撤销，这篇文章将被永久删除。"
       onConfirm={handleDelete}
       onCancel={() => setShowDeleteConfirm(false)}
+      loading={deleting}
     />
     </>
   );

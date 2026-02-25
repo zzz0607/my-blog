@@ -9,9 +9,10 @@ interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   danger?: boolean;
+  loading?: boolean;
 }
 
 export function ConfirmModal({
@@ -23,17 +24,19 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
   danger = true,
+  loading: externalLoading,
 }: ConfirmModalProps) {
-  const [loading, setLoading] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(false);
+  const loading = externalLoading ?? internalLoading;
 
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
-    setLoading(true);
+    setInternalLoading(true);
     try {
       await onConfirm();
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
