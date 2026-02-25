@@ -112,8 +112,8 @@ export default function HomeClient({ initialPosts, initialMicroposts }: { initia
         </div>
         
         <div>
-          {content.map((item: any, index: number) => (
-            <div key={`${item.type}-${index}`}>
+          {content.map((item: any) => (
+            <div key={`${item.type}-${item.id}`}>
               {item.type === 'post' ? (
                 <PostCard post={item} onDelete={handleDeletePost} />
               ) : (
